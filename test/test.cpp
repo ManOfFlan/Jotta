@@ -13,11 +13,13 @@
 namespace si = boost::units::si;
 BOOST_AUTO_TEST_CASE(result_constructor_test)
 {
-	jotta::result<si::absorbed_dose> unt(std::string("Absd dose"));
+	jotta::result<si::absorbed_dose> unt(std::string("uninit Absd dose"));
+	jotta::result<si::absorbed_dose> alt(std::string("Absd dose"));
 	jotta::result<si::time> time_default(std::string("time_default"),units::quantity<si::time>(40.0*si::seconds));
 	jotta::result<si::time> time_with_char("time_with_char",units::quantity<si::time>(40.0*si::seconds));
 	jotta::result<si::time> hard_time("time_without_ar",12.0f*si::seconds);
 
+	alt = -19.03* si::grays;
 	// I think I'd like to be able to do this
 	// but to do this - I need to be able to extract a "seconds"
 	// or something similar from a si::time
