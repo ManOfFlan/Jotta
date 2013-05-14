@@ -2,12 +2,34 @@
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/si/io.hpp>
 namespace units = boost::units;
+
+class console_log{
+     public:
+     console_log(std::ostream& o_stream):output_stream(o_stream){
+     }
+     
+     template<typename T>
+     const bool record(const T& statistic){
+          output_stream << statistic;
+          return true;     
+     }
+     private:
+     std::ostream& output_stream;
+};
+
+class log_to_std_out : public console_log{
+     public:
+     log_to_std_out():console_log(std::cout){}
+};
+
+
 namespace jotta{	
 	template<typename Unit,
 			 typename DataType = double
-			 /*, typename StoragePolicy = console_log*/
+			 , class StoragePolicy = log_to_std_out
+			 /*, class FailurePolicy = record_failures_and_log */ 
 			 >
-	class result : public units::quantity<Unit,DataType> {
+	class result : public units::quantity<Unit,DataType>, public StoragePolicy {
 	private:
 		bool written_to_;
 		const std::string field_name_;
@@ -49,28 +71,26 @@ namespace jotta{
 		// 2) Try and help along the compiler with different
 		//    units conversions somehow
 		
-		bool is_valid(){
+		bool is_valid() const {
 			return written_to_;
 		}
-
-		operator bool(){
-			return is_valid();
-		}
-
-		std::string field(){
+		
+		std::string field() const {
 			return field_name_;
-		}
-
-		operator std::string(){
-			return field();
 		}
 		
 		~result(){
-			if(!written_to_){
-				std::cout << field_name_ <<" did not record a result." << std::endl;
-			}else{
-				std::cout << field_name_ << " recorded  as " << (*this) << "." << std::endl;
-			}
+		     StoragePolicy::record(*this);
 		}
 	};
+}
+
+template<typename Unit,typename DataType,typename StoragePolicy>
+std::ostream& operator << (std::ostream& out,const jotta::result<Unit,DataType,StoragePolicy>& stat){
+     if(stat.is_valid()){
+          out << stat.field() << " recorded as " << units::quantity<Unit,DataType>(stat) << "." << std::endl;
+     }else{
+          out << stat.field() << " did not record a result." << std::endl; 
+     }
+     return out;                                   
 }
