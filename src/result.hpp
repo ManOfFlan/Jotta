@@ -1,32 +1,13 @@
-#include <iostream>
 #include <boost/units/systems/si.hpp>
 #include <boost/units/systems/si/io.hpp>
+#include "loggers.hpp"
+
 namespace units = boost::units;
-
-class console_log{
-     public:
-     console_log(std::ostream& o_stream):output_stream(o_stream){
-     }
-     
-     template<typename T>
-     const bool record(const T& statistic){
-          output_stream << statistic;
-          return true;     
-     }
-     private:
-     std::ostream& output_stream;
-};
-
-class log_to_std_out : public console_log{
-     public:
-     log_to_std_out():console_log(std::cout){}
-};
-
 
 namespace jotta{	
 	template<typename Unit,
 			 typename DataType = double
-			 , class StoragePolicy = log_to_std_out
+			 , class StoragePolicy = sql_log
 			 /*, class FailurePolicy = record_failures_and_log */ 
 			 >
 	class result : public units::quantity<Unit,DataType>, public StoragePolicy {
@@ -34,7 +15,8 @@ namespace jotta{
 		bool written_to_;
 		const std::string field_name_;
 	public:
-
+          typedef DataType primitive_type;
+          typedef Unit unit_type;
 		// constructors
 		template<typename StringType>
 		result(const StringType& name):field_name_(name),written_to_(false){
