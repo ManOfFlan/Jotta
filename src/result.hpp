@@ -7,7 +7,7 @@ namespace units = boost::units;
 namespace jotta{	
 	template<typename Unit,
 			 typename DataType = double
-			 , class StoragePolicy = sql_log
+			 , class StoragePolicy = sql_log<true>
 			 /*, class FailurePolicy = record_failures_and_log */ 
 			 >
 	class result : public units::quantity<Unit,DataType>, public StoragePolicy {

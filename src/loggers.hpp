@@ -8,6 +8,7 @@
 
 namespace units = boost::units;
 
+template<bool unique>
 class sql_log{
      public:
      sql_log()
@@ -24,7 +25,7 @@ class sql_log{
           // in the meantime we say it's a double
           double data_for_recording(raw_data);
           typename T::unit_type base_unit;
-          std::string unit_string = units::symbol_string(base_unit);         
+          std::string unit_string = units::symbol_string(base_unit);
           int metric_id = get_or_create_metric(name,unit_string);
           if(statistic.is_valid()){
                const bool success = log_value(data_for_recording,metric_id);          
@@ -50,6 +51,15 @@ private:
      }
      
      bool log_value(double val, int id){
+          if(!unique){
+          boost::optional<int> id;
+          cursor_<< "select id from rec_vals where name = :name and unit = :unit",
+                    soci::into(id),soci::use(name),soci::use(unit);
+          if(id.is_initialized()){
+               return id.get();
+          }
+          
+          }
           cursor_ << "insert into rec_vals (metric_id,val) VALUES(:a,:b)",soci::use(id),soci::use(val);
           return true;
      }
